@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}로그인{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm auth-card">
+  <div class="card-body p-4">
+    <h4 class="mb-4 text-center">로그인</h4>
+    <form method="post" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="mb-3">
+        <label for="username" class="form-label">사용자 이름</label>
+        <input type="text" class="form-control" id="username" name="username" required autofocus autocomplete="username" value="{{ username }}">
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">비밀번호</label>
+        <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
+      </div>
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" id="remember" name="remember">
+        <label class="form-check-label" for="remember">로그인 상태 유지</label>
+      </div>
+      <button type="submit" class="btn btn-success w-100">로그인</button>
+    </form>
+    <p class="text-center text-muted small mt-3 mb-0">
+      계정이 없나요? <a href="{{ url_for('register') }}">회원가입</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

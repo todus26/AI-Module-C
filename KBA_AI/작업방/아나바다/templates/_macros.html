@@ -1,0 +1,51 @@
+{% macro item_card(item) %}
+<div class="card h-100 shadow-sm item-card {{ 'is-done' if item.is_done }}">
+  <a href="{{ url_for('item_detail', item_id=item.id) }}" class="text-decoration-none position-relative">
+    {% if item.image_filename %}
+      <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}" class="item-thumb card-img-top" alt="{{ item.title }}" loading="lazy">
+    {% else %}
+      <div class="item-thumb-empty card-img-top"><i class="bi bi-image"></i></div>
+    {% endif %}
+    {% if item.is_done %}
+      <span class="badge bg-secondary position-absolute top-0 start-0 m-2">{{ item.status_label }}</span>
+    {% elif item.is_free %}
+      <span class="badge bg-success position-absolute top-0 start-0 m-2">무료 나눔</span>
+    {% endif %}
+  </a>
+  <div class="card-body">
+    <h6 class="card-title mb-1">
+      <a href="{{ url_for('item_detail', item_id=item.id) }}" class="text-dark text-decoration-none stretched-link">{{ item.title }}</a>
+    </h6>
+    <div class="{{ 'price-free' if item.is_free else 'fw-bold' }}">{{ item.price_label }}</div>
+  </div>
+  <div class="card-footer bg-transparent small text-muted d-flex justify-content-between">
+    <span><i class="bi bi-person"></i> {{ item.author.username }}</span>
+    <span>{{ item.created_at.strftime('%Y-%m-%d') }}</span>
+  </div>
+</div>
+{% endmacro %}
+
+
+{% macro pagination(pagination, q, free_only) %}
+{% if pagination.pages > 1 %}
+<nav aria-label="페이지 이동" class="mt-4">
+  <ul class="pagination justify-content-center flex-wrap">
+    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+      <a class="page-link" href="{{ url_for('index', page=pagination.prev_num, q=q or None, free='1' if free_only else None) if pagination.has_prev else '#' }}">&laquo;</a>
+    </li>
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+          <a class="page-link" href="{{ url_for('index', page=p, q=q or None, free='1' if free_only else None) }}">{{ p }}</a>
+        </li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+      <a class="page-link" href="{{ url_for('index', page=pagination.next_num, q=q or None, free='1' if free_only else None) if pagination.has_next else '#' }}">&raquo;</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endmacro %}

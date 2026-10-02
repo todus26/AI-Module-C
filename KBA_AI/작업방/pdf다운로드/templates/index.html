@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 번역기</title>
+  <style>
+    /* 밝은 배경 -> 검은 글자 / 어두운 배경 -> 흰 글자 가 항상 짝을 이루도록 변수로 관리 */
+    :root {
+      --bg-app: #f7f7f8;   --fg-app: #111111;
+      --bg-left: #ffffff;  --fg-left: #111111;
+      --bg-right: #f0f1f3; --fg-right: #111111;
+      --bg-box: #ffffff;   --fg-box: #111111;
+      --bg-accent: #10a37f; --fg-accent: #ffffff;
+      --bg-track: #dcdde1;
+      --border: #d4d5da;
+      --muted: #555555;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg-app: #212121;   --fg-app: #ffffff;
+        --bg-left: #171717;  --fg-left: #ffffff;
+        --bg-right: #212121; --fg-right: #ffffff;
+        --bg-box: #2f2f2f;   --fg-box: #ffffff;
+        --bg-accent: #10a37f; --fg-accent: #ffffff;
+        --bg-track: #3f3f3f;
+        --border: #3f3f3f;
+        --muted: #b4b4b4;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg-app: #212121;   --fg-app: #ffffff;
+      --bg-left: #171717;  --fg-left: #ffffff;
+      --bg-right: #212121; --fg-right: #ffffff;
+      --bg-box: #2f2f2f;   --fg-box: #ffffff;
+      --bg-accent: #10a37f; --fg-accent: #ffffff;
+      --bg-track: #3f3f3f;
+      --border: #3f3f3f;
+      --muted: #b4b4b4;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: var(--bg-app);
+      color: var(--fg-app);
+    }
+
+    .app { display: flex; height: 100vh; }
+
+    .panel { display: flex; flex-direction: column; padding: 24px; overflow-y: auto; }
+    .panel-left {
+      flex: 0 0 340px;
+      background: var(--bg-left);
+      color: var(--fg-left);
+      border-right: 1px solid var(--border);
+      gap: 20px;
+    }
+    .panel-right {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: var(--bg-right);
+      color: var(--fg-right);
+      gap: 16px;
+    }
+
+    h1 { font-size: 20px; margin: 0; display: flex; justify-content: space-between; align-items: center; }
+    h2 { font-size: 14px; margin: 0; }
+    .muted { color: var(--muted); font-size: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 8px; }
+
+    input[type="file"] {
+      background: var(--bg-box);
+      color: var(--fg-box);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      width: 100%;
+    }
+    input[type="file"]::file-selector-button {
+      background: var(--bg-accent);
+      color: var(--fg-accent);
+      border: 0;
+      border-radius: 6px;
+      padding: 6px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+    }
+
+    .radio-group { display: flex; flex-direction: column; gap: 6px; }
+    .radio-group label {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-box); color: var(--fg-box);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px; cursor: pointer;
+    }
+
+    button {
+      font: inherit;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      cursor: pointer;
+      background: var(--bg-accent);
+      color: var(--fg-accent);
+      font-weight: 600;
+    }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+    button.ghost {
+      background: var(--bg-box); color: var(--fg-box);
+      border: 1px solid var(--border);
+      padding: 4px 10px; font-size: 12px; font-weight: 500;
+    }
+    #downloadBtn { padding: 8px 14px; font-size: 13px; }
+
+    .progress-track {
+      height: 12px; border-radius: 999px; overflow: hidden;
+      background: var(--bg-track);
+    }
+    .progress-bar {
+      height: 100%; width: 0%;
+      background: var(--bg-accent);
+      transition: width 0.3s ease;
+    }
+    .progress-text { display: flex; justify-content: space-between; font-size: 13px; }
+    #status { min-height: 18px; }
+    #status.error { color: #ef4444; font-weight: 600; }
+
+    .box { display: flex; flex-direction: column; flex: 1 1 0; min-height: 0; }
+    .box-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; min-height: 36px; }
+    textarea {
+      flex: 1 1 auto;
+      width: 100%;
+      resize: none;
+      background: var(--bg-box);
+      color: var(--fg-box);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font: 14px/1.6 "Segoe UI", "Malgun Gothic", sans-serif;
+    }
+    textarea:focus { outline: 2px solid var(--bg-accent); }
+
+    @media (max-width: 800px) {
+      .app { flex-direction: column; height: auto; }
+      .panel-left { flex: none; border-right: 0; border-bottom: 1px solid var(--border); }
+      .box { min-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="panel panel-left">
+      <h1>
+        PDF 번역기
+        <button type="button" class="ghost" id="themeBtn">테마 전환</button>
+      </h1>
+
+      <div class="field">
+        <h2>1. PDF 업로드</h2>
+        <input type="file" id="fileInput" accept="application/pdf,.pdf">
+        <span class="muted" id="fileInfo">PDF를 선택하면 텍스트가 바로 추출됩니다.</span>
+      </div>
+
+      <div class="field">
+        <h2>2. 번역 방향</h2>
+        <div class="radio-group">
+          <label><input type="radio" name="direction" value="en-ko" checked> 영어 → 한국어</label>
+          <label><input type="radio" name="direction" value="ko-en"> 한국어 → 영어</label>
+        </div>
+      </div>
+
+      <button type="button" id="startBtn" disabled>번역 시작</button>
+
+      <div class="field">
+        <h2>진행 상태</h2>
+        <div class="progress-track"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-text">
+          <span id="progressDetail">대기 중</span>
+          <strong id="progressPercent">0%</strong>
+        </div>
+        <div id="status" class="muted"></div>
+      </div>
+
+      <span class="muted" style="margin-top:auto">모델: {{ model }}</span>
+    </aside>
+
+    <main class="panel panel-right">
+      <section class="box">
+        <div class="box-header"><h2>PDF에서 추출한 텍스트</h2></div>
+        <textarea id="sourceText" readonly placeholder="추출된 텍스트가 여기에 표시됩니다."></textarea>
+      </section>
+
+      <section class="box">
+        <div class="box-header">
+          <h2>번역된 내용</h2>
+          <button type="button" id="downloadBtn" disabled>다운로드 (.txt)</button>
+        </div>
+        <textarea id="resultText" readonly placeholder="번역 결과가 실시간으로 여기에 추가됩니다."></textarea>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const fileInput = $("fileInput"), startBtn = $("startBtn"), downloadBtn = $("downloadBtn");
+    const sourceText = $("sourceText"), resultText = $("resultText");
+    const progressBar = $("progressBar"), progressPercent = $("progressPercent");
+    const progressDetail = $("progressDetail"), statusEl = $("status"), fileInfo = $("fileInfo");
+
+    let jobId = null;
+    let eventSource = null;
+
+    function setStatus(msg, isError = false) {
+      statusEl.textContent = msg;
+      statusEl.className = isError ? "error" : "muted";
+    }
+
+    function setProgress(percent, detail) {
+      progressBar.style.width = percent + "%";
+      progressPercent.textContent = percent + "%";
+      if (detail) progressDetail.textContent = detail;
+    }
+
+    function closeStream() {
+      if (eventSource) { eventSource.close(); eventSource = null; }
+    }
+
+    fileInput.addEventListener("change", async () => {
+      closeStream();
+      jobId = null;
+      startBtn.disabled = true;
+      downloadBtn.disabled = true;
+      sourceText.value = "";
+      resultText.value = "";
+      setProgress(0, "대기 중");
+
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      setStatus("PDF에서 텍스트를 추출하는 중...");
+      const form = new FormData();
+      form.append("file", file);
+
+      try {
+        const res = await fetch("/upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "업로드에 실패했습니다.");
+        jobId = data.job_id;
+        sourceText.value = data.text;
+        fileInfo.textContent = `${data.filename} / ${data.page_count}쪽 / ${data.chunk_count}개 청크`;
+        setStatus("텍스트 추출 완료. 번역 방향을 선택하고 시작하세요.");
+        startBtn.disabled = false;
+      } catch (err) {
+        setStatus(err.message, true);
+      }
+    });
+
+    startBtn.addEventListener("click", () => {
+      if (!jobId) return;
+      closeStream();
+      resultText.value = "";
+      downloadBtn.disabled = true;
+      startBtn.disabled = true;
+      fileInput.disabled = true;
+      setProgress(0, "번역 준비 중...");
+      setStatus("번역을 시작합니다.");
+
+      const direction = document.querySelector('input[name="direction"]:checked').value;
+      const es = new EventSource(`/translate/${jobId}?direction=${direction}`);
+      eventSource = es;
+
+      es.addEventListener("start", (e) => {
+        const { total } = JSON.parse(e.data);
+        setProgress(0, `0 / ${total} 청크`);
+      });
+
+      es.addEventListener("chunk", (e) => {
+        const d = JSON.parse(e.data);
+        resultText.value += d.text;
+        resultText.scrollTop = resultText.scrollHeight;
+        setProgress(d.percent, `${d.index} / ${d.total} 청크 (페이지 ${d.page})`);
+      });
+
+      es.addEventListener("done", () => {
+        closeStream();
+        setProgress(100, "번역 완료");
+        setStatus("번역이 완료되었습니다. 다운로드할 수 있습니다.");
+        downloadBtn.disabled = false;
+        startBtn.disabled = false;
+        fileInput.disabled = false;
+      });
+
+      // 서버가 보낸 error 이벤트(e.data 있음)와 연결 오류(e.data 없음)를 함께 처리한다.
+      es.addEventListener("error", (e) => {
+        let message = "서버와의 연결이 끊어졌습니다.";
+        if (e.data) {
+          try { message = JSON.parse(e.data).message; } catch (_) {}
+        }
+        closeStream();
+        setStatus(message, true);
+        startBtn.disabled = false;
+        fileInput.disabled = false;
+      });
+    });
+
+    downloadBtn.addEventListener("click", () => {
+      if (jobId) window.location.href = `/download/${jobId}`;
+    });
+
+    $("themeBtn").addEventListener("click", () => {
+      const root = document.documentElement;
+      const isDark = root.dataset.theme
+        ? root.dataset.theme === "dark"
+        : window.matchMedia("(prefers-color-scheme: dark)").matches;
+      root.dataset.theme = isDark ? "light" : "dark";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.title }}{% endblock %}
+
+{% block content %}
+{% set is_owner = current_user.is_authenticated and current_user.id == item.author_id %}
+
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a href="{{ url_for('index') }}">물품 목록</a></li>
+    <li class="breadcrumb-item active" aria-current="page">상세</li>
+  </ol>
+</nav>
+
+<div class="row g-4">
+  <div class="col-12 col-lg-6">
+    {% if item.image_filename %}
+      <img src="{{ url_for('static', filename='uploads/' ~ item.image_filename) }}" alt="{{ item.title }}" class="detail-image shadow-sm">
+    {% else %}
+      <div class="detail-image-empty shadow-sm"><i class="bi bi-image"></i></div>
+    {% endif %}
+  </div>
+
+  <div class="col-12 col-lg-6">
+    <div class="mb-2">
+      <span class="badge {{ 'bg-secondary' if item.is_done else 'bg-primary' }}">{{ item.status_label }}</span>
+      {% if item.is_free %}<span class="badge bg-success">무료 나눔</span>{% endif %}
+    </div>
+    <h2 class="h3 mb-2">{{ item.title }}</h2>
+    <div class="fs-3 mb-3 {{ 'price-free' if item.is_free else 'fw-bold' }}">{{ item.price_label }}</div>
+
+    <ul class="list-unstyled text-muted small mb-3">
+      <li><i class="bi bi-person"></i> 등록자: {{ item.author.username }}</li>
+      <li><i class="bi bi-calendar-plus"></i> 등록일: {{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</li>
+      {% if item.updated_at and item.updated_at != item.created_at %}
+        <li><i class="bi bi-pencil"></i> 수정일: {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</li>
+      {% endif %}
+    </ul>
+
+    <hr>
+    <p class="description-text">{{ item.description }}</p>
+    <hr>
+
+    {% if is_owner %}
+      <div class="d-flex flex-wrap gap-2">
+        <form method="post" action="{{ url_for('item_toggle_status', item_id=item.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% if item.is_done %}
+            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-arrow-counterclockwise"></i> {{ '나눔 중' if item.is_free else '거래 가능' }}으로 변경</button>
+          {% else %}
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check2-circle"></i> {{ '나눔' if item.is_free else '거래' }} 완료 처리</button>
+          {% endif %}
+        </form>
+        <a href="{{ url_for('item_edit', item_id=item.id) }}" class="btn btn-outline-secondary"><i class="bi bi-pencil-square"></i> 수정</a>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="bi bi-trash"></i> 삭제</button>
+      </div>
+
+      <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="deleteModalLabel">물품 삭제</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+            </div>
+            <div class="modal-body">'{{ item.title }}' 물품을 삭제할까요? 삭제 후에는 되돌릴 수 없습니다.</div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+              <form method="post" action="{{ url_for('item_delete', item_id=item.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">삭제</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

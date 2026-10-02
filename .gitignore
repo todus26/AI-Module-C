@@ -2,3 +2,14 @@
 *.gguf
 KBA_AI/작업방/local_rag/models/bge-m3/pytorch_model.bin
 KBA_AI/작업방/local_rag/models/bge-m3/onnx/model.onnx_data
+
+# 실행 파일 빌드 결과와 캐시
+__pycache__/
+*.py[cod]
+.pytest_cache/
+KBA_AI/작업방/pdf분할병합/pdf_tool/build/
+KBA_AI/작업방/pdf분할병합/pdf_tool/dist/
+
+# 로컬 비밀키와 실행 중 생긴 데이터베이스
+KBA_AI/작업방/아나바다/instance/secret_key
+KBA_AI/작업방/아나바다/instance/*.db

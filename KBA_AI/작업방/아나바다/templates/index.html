@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import item_card, pagination as render_pagination %}
+
+{% block title %}물품 목록{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-4">
+  <div class="card-body">
+    <form method="get" action="{{ url_for('index') }}" class="row g-2 align-items-center">
+      <div class="col-12 col-md">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search"></i></span>
+          <input type="search" name="q" value="{{ q }}" class="form-control" placeholder="제목 또는 내용으로 검색">
+        </div>
+      </div>
+      <div class="col-auto">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" role="switch" id="free" name="free" value="1" {{ 'checked' if free_only }}>
+          <label class="form-check-label" for="free">무료 나눔만 보기</label>
+        </div>
+      </div>
+      <div class="col-auto d-flex gap-2">
+        <button type="submit" class="btn btn-success">검색</button>
+        {% if q or free_only %}
+          <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">초기화</a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">
+    {% if q or free_only %}검색 결과{% else %}최근 등록된 물품{% endif %}
+    <span class="text-muted fs-6">({{ pagination.total }}건)</span>
+  </h5>
+  {% if current_user.is_authenticated %}
+    <a href="{{ url_for('item_create') }}" class="btn btn-success btn-sm"><i class="bi bi-plus-lg"></i> 물품 등록</a>
+  {% endif %}
+</div>
+
+{% if pagination.items %}
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+    {% for item in pagination.items %}
+      <div class="col">{{ item_card(item) }}</div>
+    {% endfor %}
+  </div>
+  {{ render_pagination(pagination, q, free_only) }}
+{% else %}
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+    {% if q or free_only %}조건에 맞는 물품이 없습니다.{% else %}아직 등록된 물품이 없습니다. 첫 물품을 등록해 보세요!{% endif %}
+  </div>
+{% endif %}
+{% endblock %}
