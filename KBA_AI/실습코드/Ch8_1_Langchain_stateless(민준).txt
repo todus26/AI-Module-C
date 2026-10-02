@@ -1,0 +1,23 @@
+========================
+1. 기본 호출
+========================
+# 1차
+curl https://api.openai.com/v1/chat/completions ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer %OPENAI_API_KEY%" ^
+  -d "{\"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"user\", \"content\": \"내 이름은 민준이야. 반가워! \"}]}"
+
+~~~~~~~~~~
+# 2차
+curl https://api.openai.com/v1/chat/completions ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer %OPENAI_API_KEY%" ^
+  -d "{\"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"user\", \"content\": \"내 이름이 뭐게?\"}]}"
+
+========================
+2. 메모리 주입
+========================
+curl https://api.openai.com/v1/chat/completions ^
+  -H "Content-Type: application/json" ^
+  -H "Authorization: Bearer %OPENAI_API_KEY%" ^
+  -d "{\"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"user\", \"content\": \"안녕, 내 이름은 민준이야.\"}, {\"role\": \"assistant\", \"content\": \"안녕하세요 민준님!\"}, {\"role\": \"user\", \"content\": \"내 이름이 뭐게?\"}]}"

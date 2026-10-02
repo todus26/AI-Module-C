@@ -1,0 +1,827 @@
+{
+  "metadata": {
+    "title": "제조설비별 이상장애 조건 정의",
+    "description": "Rule 기반 이상장애 감시 Agent 실습용 조건 JSON",
+    "time_unit": "minute",
+    "status_levels": [
+      "warning",
+      "critical"
+    ],
+    "note": "조건이 duration_minutes 이상 지속될 때 해당 anomaly_type으로 판단한다."
+  },
+  "rules": [
+    {
+      "equipment_type": "MOTOR",
+      "status": "warning",
+      "anomaly_type": "bearing_wear",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.4,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 80,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "베어링 진동",
+        "윤활 상태"
+      ],
+      "action": "윤활 상태 확인 및 진동 추세 모니터링"
+    },
+    {
+      "equipment_type": "MOTOR",
+      "status": "warning",
+      "anomaly_type": "lubrication_shortage",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "oil_level",
+            "operator": "<",
+            "value": 50,
+            "unit": "%"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 78,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "오일 레벨",
+        "누유 여부"
+      ],
+      "action": "윤활유 보충 및 누유 점검"
+    },
+    {
+      "equipment_type": "MOTOR",
+      "status": "warning",
+      "anomaly_type": "overcurrent",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 27,
+            "unit": "A"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 82,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "부하율",
+        "전류 피크"
+      ],
+      "action": "부하 감소 및 전류 확인"
+    },
+    {
+      "equipment_type": "MOTOR",
+      "status": "warning",
+      "anomaly_type": "contamination",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.35,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 75,
+            "unit": "dB"
+          }
+        ]
+      },
+      "duration_minutes": 20,
+      "check_items": [
+        "필터 상태",
+        "내부 분진"
+      ],
+      "action": "내부 청소 및 필터 점검"
+    },
+    {
+      "equipment_type": "MOTOR",
+      "status": "critical",
+      "anomaly_type": "bearing_wear",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.65,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 90,
+            "unit": "C"
+          },
+          {
+            "sensor": "rpm",
+            "operator": "<",
+            "value": 1680,
+            "unit": "rpm"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "베어링 손상 여부"
+      ],
+      "action": "즉시 정지 후 베어링 교체"
+    },
+    {
+      "equipment_type": "MOTOR",
+      "status": "critical",
+      "anomaly_type": "motor_overheat",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 98,
+            "unit": "C"
+          },
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 32,
+            "unit": "A"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "권선 온도",
+        "냉각 상태"
+      ],
+      "action": "긴급 정지 및 냉각라인 점검"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "warning",
+      "anomaly_type": "pressure_abnormal",
+      "condition": {
+        "logic": "OR",
+        "rules": [
+          {
+            "sensor": "pressure",
+            "operator": "<",
+            "value": 2.2,
+            "unit": "bar"
+          },
+          {
+            "sensor": "pressure",
+            "operator": ">",
+            "value": 4.5,
+            "unit": "bar"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "압력 변동",
+        "밸브 상태"
+      ],
+      "action": "배관 및 밸브 상태 점검"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "warning",
+      "anomaly_type": "cooling_failure",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 82,
+            "unit": "C"
+          },
+          {
+            "sensor": "pressure",
+            "operator": ">",
+            "value": 4.2,
+            "unit": "bar"
+          }
+        ]
+      },
+      "duration_minutes": 8,
+      "check_items": [
+        "냉각팬",
+        "냉각라인"
+      ],
+      "action": "냉각팬 및 냉각라인 점검"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "warning",
+      "anomaly_type": "leakage",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "oil_level",
+            "operator": "<",
+            "value": 55,
+            "unit": "%"
+          },
+          {
+            "sensor": "pressure",
+            "operator": "trend_down",
+            "value": true,
+            "unit": "trend"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "씰 상태",
+        "배관 누설"
+      ],
+      "action": "누설 부위 확인"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "warning",
+      "anomaly_type": "inverter_failure",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "rpm",
+            "operator": "fluctuation_pct",
+            "value": 8,
+            "unit": "%"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "인버터 출력",
+        "RPM 안정성"
+      ],
+      "action": "인버터 로그 점검"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "critical",
+      "anomaly_type": "pressure_abnormal",
+      "condition": {
+        "logic": "OR",
+        "rules": [
+          {
+            "sensor": "pressure",
+            "operator": "<",
+            "value": 1.8,
+            "unit": "bar"
+          },
+          {
+            "sensor": "pressure",
+            "operator": ">",
+            "value": 5.5,
+            "unit": "bar"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "캐비테이션",
+        "배관 막힘"
+      ],
+      "action": "즉시 운전 중지 후 배관 및 밸브 점검"
+    },
+    {
+      "equipment_type": "PUMP",
+      "status": "critical",
+      "anomaly_type": "cooling_failure",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 95,
+            "unit": "C"
+          },
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 30,
+            "unit": "A"
+          }
+        ]
+      },
+      "duration_minutes": 3,
+      "check_items": [
+        "냉각계통 이상"
+      ],
+      "action": "냉각라인 세척 및 팬 교체"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "warning",
+      "anomaly_type": "overload_operation",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 28,
+            "unit": "A"
+          },
+          {
+            "sensor": "pressure",
+            "operator": ">",
+            "value": 4.5,
+            "unit": "bar"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "부하율",
+        "토출압력"
+      ],
+      "action": "운전조건 조정"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "warning",
+      "anomaly_type": "misalignment",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.45,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 78,
+            "unit": "dB"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "축정렬",
+        "커플링"
+      ],
+      "action": "축 정렬 점검"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "warning",
+      "anomaly_type": "overcurrent",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 29,
+            "unit": "A"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 85,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "전류 피크"
+      ],
+      "action": "부하 감소"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "warning",
+      "anomaly_type": "shaft_damage",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.5,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 80,
+            "unit": "dB"
+          }
+        ]
+      },
+      "duration_minutes": 20,
+      "check_items": [
+        "축 손상 여부"
+      ],
+      "action": "축 상태 점검"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "critical",
+      "anomaly_type": "cooling_failure",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 100,
+            "unit": "C"
+          },
+          {
+            "sensor": "pressure",
+            "operator": ">",
+            "value": 5.5,
+            "unit": "bar"
+          }
+        ]
+      },
+      "duration_minutes": 3,
+      "check_items": [
+        "냉각계통"
+      ],
+      "action": "긴급 정지 및 냉각계통 정비"
+    },
+    {
+      "equipment_type": "COMPRESSOR",
+      "status": "critical",
+      "anomaly_type": "overload_operation",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 34,
+            "unit": "A"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 95,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "과부하 상태"
+      ],
+      "action": "부하 차단 및 긴급 점검"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "warning",
+      "anomaly_type": "misalignment",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.4,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "rpm",
+            "operator": "fluctuation",
+            "value": true,
+            "unit": "trend"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "축정렬",
+        "임펠러"
+      ],
+      "action": "정렬 상태 확인"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "warning",
+      "anomaly_type": "contamination",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 75,
+            "unit": "dB"
+          },
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.35,
+            "unit": "mm/s"
+          }
+        ]
+      },
+      "duration_minutes": 20,
+      "check_items": [
+        "임펠러 오염"
+      ],
+      "action": "내부 청소"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "warning",
+      "anomaly_type": "loose_bolt",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": "spike_repeat",
+            "value": true,
+            "unit": "event"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "체결 상태"
+      ],
+      "action": "볼트 체결 점검"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "warning",
+      "anomaly_type": "overcurrent",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 27,
+            "unit": "A"
+          },
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 80,
+            "unit": "C"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "부하율",
+        "인버터"
+      ],
+      "action": "부하 감소"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "critical",
+      "anomaly_type": "loose_bolt",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.7,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 85,
+            "unit": "dB"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "베이스 체결"
+      ],
+      "action": "즉시 정지 후 재체결"
+    },
+    {
+      "equipment_type": "FAN",
+      "status": "critical",
+      "anomaly_type": "valve_failure",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "pressure",
+            "operator": "fluctuation",
+            "value": true,
+            "unit": "trend"
+          },
+          {
+            "sensor": "rpm",
+            "operator": "fluctuation",
+            "value": true,
+            "unit": "trend"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "밸브 응답성"
+      ],
+      "action": "밸브 오버홀 수행"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "warning",
+      "anomaly_type": "loose_bolt",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.35,
+            "unit": "mm/s"
+          },
+          {
+            "sensor": "noise_db",
+            "operator": ">",
+            "value": 72,
+            "unit": "dB"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "롤러 브라켓"
+      ],
+      "action": "체결 상태 점검"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "warning",
+      "anomaly_type": "leakage",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "oil_level",
+            "operator": "<",
+            "value": 50,
+            "unit": "%"
+          }
+        ]
+      },
+      "duration_minutes": 15,
+      "check_items": [
+        "씰 상태"
+      ],
+      "action": "누설 여부 확인"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "warning",
+      "anomaly_type": "pressure_abnormal",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "rpm",
+            "operator": "fluctuation",
+            "value": true,
+            "unit": "trend"
+          },
+          {
+            "sensor": "current",
+            "operator": "trend_up",
+            "value": true,
+            "unit": "trend"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "압력라인",
+        "구동부 부하"
+      ],
+      "action": "압력라인 및 구동부 점검"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "warning",
+      "anomaly_type": "motor_overheat",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 82,
+            "unit": "C"
+          },
+          {
+            "sensor": "current",
+            "operator": ">",
+            "value": 27,
+            "unit": "A"
+          }
+        ]
+      },
+      "duration_minutes": 8,
+      "check_items": [
+        "권선 온도"
+      ],
+      "action": "냉각상태 확인"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "critical",
+      "anomaly_type": "motor_overheat",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "temperature",
+            "operator": ">",
+            "value": 98,
+            "unit": "C"
+          },
+          {
+            "sensor": "vibration",
+            "operator": ">",
+            "value": 0.6,
+            "unit": "mm/s"
+          }
+        ]
+      },
+      "duration_minutes": 5,
+      "check_items": [
+        "모터 과열"
+      ],
+      "action": "긴급 정지 및 절연 점검"
+    },
+    {
+      "equipment_type": "CONVEYOR",
+      "status": "critical",
+      "anomaly_type": "leakage",
+      "condition": {
+        "logic": "AND",
+        "rules": [
+          {
+            "sensor": "oil_level",
+            "operator": "<",
+            "value": 30,
+            "unit": "%"
+          },
+          {
+            "sensor": "pressure",
+            "operator": "loss",
+            "value": true,
+            "unit": "event"
+          }
+        ]
+      },
+      "duration_minutes": 10,
+      "check_items": [
+        "씰 손상"
+      ],
+      "action": "즉시 누설 차단 및 씰 교체"
+    }
+  ]
+}
