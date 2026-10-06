@@ -13,3 +13,8 @@ KBA_AI/작업방/pdf분할병합/pdf_tool/dist/
 # 로컬 비밀키와 실행 중 생긴 데이터베이스
 KBA_AI/작업방/아나바다/instance/secret_key
 KBA_AI/작업방/아나바다/instance/*.db
+KBA_AI/작업방/아나바다/static/uploads/*
+!KBA_AI/작업방/아나바다/static/uploads/.gitkeep
+
+# 노트북 실행 중 생기는 벡터 DB (Chroma)
+KBA_AI/실습코드/database/

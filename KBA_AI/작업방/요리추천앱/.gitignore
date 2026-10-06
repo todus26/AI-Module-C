@@ -1,0 +1,3 @@
+data/pantry.db
+__pycache__/
+.pytest_cache/
