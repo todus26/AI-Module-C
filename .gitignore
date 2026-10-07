@@ -22,3 +22,13 @@ KBA_AI/실습코드/database/
 # 로컬 RAG 실행 중 생기는 업로드 PDF와 벡터 DB
 KBA_AI/작업방/local_rag/uploads/
 KBA_AI/작업방/local_rag/chroma_db/
+
+# 계약서 검토 웹 실행 중 생기는 업로드 PDF와 벡터 DB
+KBA_AI/작업방/계약서검토/uploads/
+KBA_AI/작업방/계약서검토/chroma_db/
+
+# 환경변수(비밀키)와 실행 중 생기는 DB·분석 결과
+KBA_AI/작업방/재고관리시스템/.env
+KBA_AI/작업방/재고관리시스템/inventory.db
+KBA_AI/작업방/뉴스수집/.env
+KBA_AI/작업방/고객voc분석/outputs/

@@ -1,0 +1,153 @@
+/* ===== 색상 정의: 연한 파랑 + 연한 회색 ===== */
+:root {
+  --blue-50: #f0f7ff;
+  --blue-100: #deedfc;
+  --blue-200: #c4e0f9;
+  --blue-400: #7fb7ec;
+  --blue-dark: #0b3a8c;      /* 수정 문구용 진한 파랑 */
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e3e6ea;
+  --gray-500: #7b8590;
+  --gray-800: #28313b;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  color: var(--gray-800);
+  background: var(--gray-50);
+}
+
+/* 전체 화면을 왼쪽 메뉴 / 오른쪽 본문 두 칸으로 나눈다 */
+.app { display: flex; height: 100vh; }
+
+/* ===== 왼쪽 메뉴 ===== */
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 20px 16px;
+  background: var(--gray-100);
+  border-right: 1px solid var(--gray-200);
+}
+
+.brand { display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+.brand-mark {
+  width: 32px; height: 32px;
+  display: grid; place-items: center;
+  border-radius: 8px;
+  background: var(--blue-400);
+  color: #fff;
+  font-weight: 700;
+}
+.brand-text { font-size: 17px; font-weight: 700; }
+
+.menu { display: flex; flex-direction: column; gap: 10px; }
+.menu-btn {
+  padding: 12px 14px;
+  border: 1px solid var(--blue-200);
+  border-radius: 10px;
+  background: var(--blue-100);
+  color: var(--gray-800);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.menu-btn:hover:not(:disabled) { background: var(--blue-200); }
+.menu-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.menu-btn-primary { background: var(--blue-400); border-color: var(--blue-400); color: #fff; font-weight: 600; }
+.menu-btn-primary:hover:not(:disabled) { background: #6aa9e2; }
+.menu-btn[hidden] { display: none; }
+
+.status { margin-top: auto; padding: 14px; border-radius: 10px; background: #fff; border: 1px solid var(--gray-200); }
+.status h2 { margin: 0 0 8px; font-size: 13px; color: var(--gray-500); font-weight: 600; }
+.status dl { margin: 0; font-size: 13px; }
+.status dt { margin-top: 8px; color: var(--gray-500); }
+.status dd { margin: 2px 0 0; word-break: break-all; }
+
+/* ===== 오른쪽 본문 ===== */
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.main-header {
+  padding: 16px 24px;
+  font-weight: 700;
+  background: var(--blue-50);
+  border-bottom: 1px solid var(--blue-100);
+}
+
+.messages { flex: 1; overflow-y: auto; padding: 24px 0; }
+.msg { display: flex; padding: 6px 24px; max-width: 920px; margin: 0 auto; }
+.msg-user { justify-content: flex-end; }
+.bubble { max-width: 100%; line-height: 1.65; word-break: break-word; white-space: pre-wrap; }
+.msg-user .bubble {
+  max-width: 75%;
+  padding: 10px 16px;
+  border-radius: 16px 16px 4px 16px;
+  background: var(--blue-100);
+}
+.msg-assistant .bubble { width: 100%; padding: 4px 0; }
+.msg-error .bubble { color: #b3261e; }
+
+/* ===== tqdm 진행률 ===== */
+.progress { margin: 10px 0; padding: 10px 14px; border-radius: 10px; background: var(--gray-100); border: 1px solid var(--gray-200); }
+.progress-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.progress-bar-text {
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 12.5px;
+  color: var(--gray-500);
+  white-space: pre;
+  overflow-x: auto;
+}
+.progress-track { height: 6px; margin-top: 6px; border-radius: 3px; background: var(--gray-200); overflow: hidden; }
+.progress-fill { height: 100%; width: 0; background: var(--blue-400); transition: width 0.2s; }
+.progress.finished .progress-fill { background: #5aa6e6; }
+
+/* ===== 계약서 검토 결과 ===== */
+.sentence { margin: 0 0 14px; padding: 4px 0 4px 12px; border-left: 3px solid var(--gray-200); }
+.sentence.has-fix { border-left-color: var(--blue-400); }
+.sentence .tag { font-weight: 700; margin-right: 4px; }
+.sentence .rev { margin-top: 4px; color: var(--blue-dark); font-weight: 700; }   /* 진한 파란 글씨 */
+.sentence .reason { margin-top: 4px; font-size: 12.5px; color: var(--gray-500); }
+.sentence .err { margin-top: 4px; font-size: 12.5px; color: #b3261e; }
+
+/* ===== 하단 질문창 ===== */
+.composer {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  width: calc(100% - 48px);
+  max-width: 872px;
+  margin: 0 auto 20px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 16px;
+  background: var(--gray-100);
+}
+.composer textarea {
+  flex: 1;
+  max-height: 160px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  font: inherit;
+  line-height: 1.5;
+}
+.composer button {
+  padding: 8px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--blue-400);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.composer button:disabled { opacity: 0.5; cursor: not-allowed; }

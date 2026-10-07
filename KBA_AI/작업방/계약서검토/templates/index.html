@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LLM 기반 계약서 검토 웹</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app">
+
+    <!-- ===== 왼쪽: 메뉴 ===== -->
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">C</span>
+        <span class="brand-text">계약서 검토 AI</span>
+      </div>
+
+      <nav class="menu">
+        <!-- 숨겨진 파일 선택창: 버튼을 누르면 이 input 이 대신 열린다 -->
+        <input type="file" id="ragInput" accept="application/pdf,.pdf" multiple hidden>
+        <input type="file" id="contractInput" accept="application/pdf,.pdf" hidden>
+
+        <button class="menu-btn" id="ragBtn" type="button">RAG 파일 업로드</button>
+        <button class="menu-btn" id="contractBtn" type="button">계약서 업로드</button>
+        <!-- 계약서 업로드가 끝나야 나타난다 -->
+        <button class="menu-btn menu-btn-primary" id="reviewBtn" type="button" hidden>계약서 검토</button>
+      </nav>
+
+      <section class="status">
+        <h2>현재 상태</h2>
+        <dl>
+          <dt>RAG 문서</dt>
+          <dd id="ragStatus">없음</dd>
+          <dt>계약서</dt>
+          <dd id="contractStatus">없음</dd>
+        </dl>
+      </section>
+    </aside>
+
+    <!-- ===== 오른쪽: 채팅 및 결과 ===== -->
+    <main class="main">
+      <header class="main-header">LLM 기반 계약서 검토</header>
+
+      <div class="messages" id="messages"></div>
+
+      <form class="composer" id="chatForm">
+        <textarea id="chatInput" rows="1" placeholder="궁금한 점을 물어보세요. (Enter 전송, Shift+Enter 줄바꿈)"></textarea>
+        <button type="submit" id="sendBtn">전송</button>
+      </form>
+    </main>
+
+  </div>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

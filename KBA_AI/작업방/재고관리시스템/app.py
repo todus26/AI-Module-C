@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import os
 import sqlite3
+import sys
 from datetime import datetime
 from math import ceil
 from pathlib import Path
@@ -126,273 +128,486 @@ BASE_TEMPLATE = """
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{ title }} - 소형창고 재고관리</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <style>
     :root {
-      --bg: #f4fbff;
-      --sidebar: #f3fff5;
-      --card: #ffffff;
-      --text: #243238;
-      --muted: #65838e;
-      --green: #dff7e4;
-      --blue: #dceeff;
-      --orange: #ffe9d6;
-      --border: #d4e4ec;
-      --accent: #2c7bb5;
-      --ok: #1f8b56;
-      --warn: #d9740f;
+      --action: #004dc1;
+      --action-hover: #003fa3;
+      --bright: #0069ed;
+      --deep: #074499;
+      --navy: #0a2864;
+      --tint: #edf6fe;
+      --wash: #dcedfd;
+
+      --ink: #212529;
+      --head: #1e1f21;
+      --muted: #495057;
+      --faint: #969faa;
+      --line: #ced4da;
+      --line-soft: #e8edf2;
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+
+      --low: #c0392b;
+      --low-bg: #fdf2f0;
+      --ok: #1f7a54;
+      --ok-bg: #e8f6ef;
+
+      --radius: 3px;
+      --font: "Pretendard Variable", Pretendard, Inter, "Noto Sans KR", "Malgun Gothic", sans-serif;
     }
     * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
-      font-family: "Segoe UI", "Noto Sans KR", sans-serif;
-      background: linear-gradient(140deg, #f4fff6, #f3faff, #fff8ef);
-      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.55;
+      color: var(--ink);
+      background: var(--bg);
     }
+    a { color: var(--action); }
+    :focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+
     .layout {
       min-height: 100vh;
       display: grid;
-      grid-template-columns: 20% 80%;
+      grid-template-columns: 232px minmax(0, 1fr);
+      border-top: 4px solid var(--action);
     }
+
     .sidebar {
-      border-right: 1px solid var(--border);
-      background: var(--sidebar);
-      padding: 24px 20px;
-    }
-    .brand { font-size: 20px; font-weight: 700; margin-bottom: 14px; }
-    .sub { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
-    .group-title {
-      margin-top: 18px;
-      margin-bottom: 10px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 28px 14px 18px;
+      background: var(--surface);
+      border-right: 1px solid var(--line-soft);
       color: var(--muted);
-      font-size: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 2px 10px 22px;
+      color: var(--head);
+      text-decoration: none;
+    }
+    .brand-mark {
+      flex: none;
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(#fff, #fff) 5px 5px / 8px 8px no-repeat,
+        linear-gradient(#fff, #fff) 17px 5px / 8px 8px no-repeat,
+        linear-gradient(#fff, #fff) 5px 17px / 8px 8px no-repeat,
+        linear-gradient(#fff, #fff) 17px 17px / 8px 8px no-repeat,
+        var(--action);
+    }
+    .brand-name {
+      font-size: 17px;
       font-weight: 700;
+      letter-spacing: -0.4px;
+      line-height: 1.2;
+      color: var(--action);
+    }
+    .brand-sub { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+
+    .group-title {
+      margin: 16px 10px 5px;
+      color: var(--muted);
+      font-size: 12.5px;
+      font-weight: 600;
     }
     .nav a {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 2px;
+      padding: 8px 10px 8px 13px;
+      border-left: 3px solid transparent;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      color: var(--ink);
+      font-weight: 500;
       text-decoration: none;
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid transparent;
     }
-    .nav a.active { background: #e7f8ec; border-color: #caedd6; }
-    .nav a:hover { border-color: var(--border); background: #f8fdff; }
+    .nav a:hover { background: var(--tint); color: var(--action); }
+    .nav a.active {
+      background: var(--tint);
+      border-left-color: var(--action);
+      color: var(--action);
+      font-weight: 600;
+    }
+
     .admin {
-      margin-top: 20px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      font-size: 14px;
+      margin-top: auto;
+      padding: 14px 10px 0;
+      border-top: 1px solid var(--line-soft);
+      font-size: 13.5px;
     }
+    .admin a { color: var(--muted); text-decoration: none; }
+    .admin a:hover { color: var(--action); text-decoration: underline; }
+    .admin .who { display: block; margin-bottom: 6px; color: var(--head); font-weight: 600; }
+    .admin .links { display: flex; gap: 14px; }
+
     .main {
-      padding: 24px;
+      min-width: 0;
+      padding: 28px 36px 48px;
+      max-width: 1180px;
     }
     .head-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
+      align-items: baseline;
+      gap: 12px;
+      margin-bottom: 20px;
     }
     .head-row h1 {
       margin: 0;
-      font-size: 36px;
-      letter-spacing: -1px;
+      color: var(--head);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      line-height: 1.25;
     }
-    .badge {
-      display: inline-block;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 6px 11px;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .date { color: var(--muted); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+
     .flash {
-      margin-bottom: 12px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #cae4f5;
-      background: #edf7ff;
-      font-size: 14px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+      border: 1px solid var(--wash);
+      border-left: 3px solid var(--action);
+      border-radius: var(--radius);
+      background: var(--tint);
+      font-size: 14.5px;
     }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--surface);
+      box-shadow: inset 0 4px 0 var(--action);
+    }
+    .stat { padding: 18px 22px 16px; }
+    .stat + .stat { border-left: 1px solid var(--line-soft); }
+    .stat-label { color: var(--muted); font-size: 13.5px; font-weight: 500; }
+    .stat-value {
+      margin-top: 4px;
+      color: var(--head);
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      line-height: 1.25;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-value small { margin-left: 3px; color: var(--faint); font-size: 14px; font-weight: 500; letter-spacing: 0; }
+    .stat.is-alert .stat-value { color: var(--low); }
+
     .cards {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-bottom: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
     }
     .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 8px 20px rgba(55, 84, 126, 0.04);
+      min-width: 0;
+      overflow-x: auto;
+      padding: 18px 20px 20px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: var(--surface);
     }
-    .card h3 { margin: 0 0 10px; font-size: 16px; }
-    .bg-green { background: linear-gradient(0deg, #fff, #f6fff8); }
-    .bg-blue { background: linear-gradient(0deg, #fff, #f5f9ff); }
-    .bg-orange { background: linear-gradient(0deg, #fff, #fffaf5); }
+    .card + .card { margin-top: 16px; }
+    .cards .card + .card { margin-top: 0; }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .card h3 { margin: 0 0 12px; color: var(--head); font-size: 16px; font-weight: 700; letter-spacing: -0.4px; }
+    .card-head h3 { margin: 0; }
+    .card-note { color: var(--faint); font-size: 13px; }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 14.5px;
+      font-variant-numeric: tabular-nums;
     }
     th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line-soft);
       text-align: left;
-      padding: 9px 8px;
-      border-bottom: 1px solid #edf2f5;
       white-space: nowrap;
     }
-    th { color: var(--muted); font-size: 12px; }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(180px, 1fr));
-      gap: 10px;
-    }
-    .field { display: flex; flex-direction: column; gap: 6px; }
-    label { font-size: 12px; color: var(--muted); }
-    input, select, button {
-      font: inherit;
-      padding: 9px 10px;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: #fff;
-    }
-    button {
-      cursor: pointer;
-      background: var(--accent);
-      color: #fff;
-      border-color: #2c7bb5;
+    th {
+      padding-top: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
       font-weight: 600;
+      background: var(--bg);
     }
-    .btn-sub { background: #fff; color: var(--text); }
-    .line { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
-    .danger { color: #c2462b; }
-    .ok { color: var(--ok); }
+    td.num, th.num { text-align: right; }
+    td.name { font-weight: 600; color: var(--head); }
+    tbody tr:hover td { background: var(--tint); }
+    tbody tr:last-child td { border-bottom: 0; }
+    tr.is-low td { background: var(--low-bg); }
+    tr.is-low td:first-child { box-shadow: inset 3px 0 0 var(--low); }
+    tr.is-low:hover td { background: #fae6e2; }
+    tr.is-selected td { background: var(--tint); }
+    tr.is-selected td:first-child { box-shadow: inset 3px 0 0 var(--action); }
+    .low-text { color: var(--low); font-weight: 700; }
+    .empty { padding: 28px 12px; color: var(--muted); text-align: center; }
+
     .pill {
       display: inline-block;
-      border-radius: 999px;
-      font-size: 12px;
-      padding: 2px 8px;
-      background: #eef5fa;
-      color: #3f6786;
+      padding: 1px 8px;
+      border-radius: var(--radius);
+      background: var(--wash);
+      color: var(--deep);
+      font-size: 12.5px;
+      font-weight: 600;
     }
+    .pill.in { background: var(--wash); color: var(--action); }
+    .pill.out { background: #eef1f4; color: var(--muted); }
+    .pill.low { background: #f8d7d3; color: var(--low); }
+    .pill.ok { background: var(--ok-bg); color: var(--ok); }
+
+    .gauge {
+      position: relative;
+      width: 150px;
+      height: 6px;
+      border-radius: 1px;
+      background: var(--line-soft);
+    }
+    .gauge i {
+      position: absolute;
+      inset: 0 auto 0 0;
+      border-radius: 1px;
+      background: var(--action);
+    }
+    .gauge.low i { background: var(--low); }
+    .gauge::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -3px;
+      bottom: -3px;
+      width: 1px;
+      background: var(--ink);
+      opacity: 0.35;
+    }
+    .gauge-legend { margin: 0 0 12px; color: var(--muted); font-size: 13.5px; }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 14px 16px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    label { color: var(--muted); font-size: 13.5px; font-weight: 600; }
+    input, select, button { font: inherit; }
+    input, select {
+      width: 100%;
+      min-height: 40px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--ink);
+    }
+    input::placeholder { color: var(--faint); }
+    input:hover, select:hover { border-color: #9aa8b5; }
+    input:focus, select:focus {
+      border-color: var(--action);
+      outline: 2px solid var(--wash);
+      outline-offset: 0;
+    }
+    input[readonly] { background: var(--bg); color: var(--muted); }
+
+    button {
+      min-height: 40px;
+      padding: 8px 18px;
+      border: 1px solid var(--action);
+      border-radius: var(--radius);
+      background: var(--action);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: var(--action-hover); border-color: var(--action-hover); }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .btn-sub { background: #fff; color: var(--action); border-color: var(--line); }
+    .btn-sub:hover { background: var(--tint); border-color: var(--action); }
+
+    .line { margin-top: 16px; display: flex; gap: 8px; align-items: center; }
+    .search-box { display: flex; gap: 8px; margin-bottom: 14px; }
+    .search-box input { flex: 1; }
+
+    .link-btn {
+      display: inline-block;
+      padding: 4px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+      color: var(--action);
+      font-size: 13.5px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .link-btn:hover { background: var(--tint); border-color: var(--action); }
+    .link-all { font-size: 13.5px; font-weight: 600; text-decoration: none; }
+    .link-all:hover { text-decoration: underline; }
+
     .pager {
-      margin-top: 12px;
+      margin-top: 16px;
       display: flex;
-      gap: 8px;
+      gap: 12px;
       align-items: center;
       justify-content: center;
+      color: var(--muted);
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
     }
     .muted { color: var(--muted); }
-    .search-box { display: flex; gap: 8px; margin-bottom: 12px; }
-    .search-box input { flex: 1; }
+    .hint { margin: 0; color: var(--muted); }
+
     .chat-shell {
-      height: calc(100vh - 145px);
+      height: calc(100vh - 150px);
       min-height: 520px;
       display: grid;
       grid-template-rows: auto 1fr auto;
       overflow: hidden;
       padding: 0;
     }
-    .chat-guide {
-      padding: 16px;
-      border-bottom: 1px solid var(--border);
-      background: linear-gradient(90deg, #f5fff7, #f4f9ff);
-    }
-    .chat-guide p { margin: 6px 0 10px; color: var(--muted); }
-    .chat-examples { display: flex; flex-wrap: wrap; gap: 7px; }
+    .chat-guide { padding: 16px 20px; border-bottom: 1px solid var(--line-soft); background: var(--tint); }
+    .chat-guide p { margin: 4px 0 12px; color: var(--muted); }
+    .chat-examples { display: flex; flex-wrap: wrap; gap: 6px; }
     .chat-example {
-      padding: 6px 9px;
-      color: #3f6786;
+      min-height: 0;
+      padding: 5px 11px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
       background: #fff;
-      border-color: var(--border);
-      font-size: 12px;
-      font-weight: 500;
+      color: var(--action);
+      font-size: 13.5px;
+      font-weight: 600;
     }
-    .chat-messages {
-      overflow-y: auto;
-      padding: 18px;
-      background: #fbfdfe;
-    }
-    .chat-message {
-      display: flex;
-      margin-bottom: 14px;
-    }
+    .chat-example:hover { background: var(--wash); border-color: var(--action); }
+    .chat-messages { overflow-y: auto; padding: 20px; background: var(--bg); }
+    .chat-message { display: flex; margin-bottom: 12px; }
     .chat-message.user { justify-content: flex-end; }
     .chat-bubble {
-      max-width: min(760px, 86%);
-      padding: 11px 13px;
-      border-radius: 14px;
-      line-height: 1.55;
+      max-width: min(780px, 88%);
+      padding: 10px 14px;
+      border-radius: 4px;
+      line-height: 1.6;
       overflow-wrap: anywhere;
     }
     .chat-message.agent .chat-bubble {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-top-left-radius: 4px;
+      border: 1px solid var(--line);
+      background: var(--surface);
     }
     .chat-message.user .chat-bubble {
-      background: #dceeff;
-      border: 1px solid #c4dff5;
-      border-top-right-radius: 4px;
+      background: var(--action);
+      color: #fff;
     }
-    .chat-bubble p { margin: 0 0 7px; }
+    .chat-bubble p { margin: 0 0 8px; }
     .chat-bubble p:last-child { margin-bottom: 0; }
     .chat-bubble code {
-      padding: 2px 5px;
-      border-radius: 5px;
-      background: #f0f4f6;
-      font-family: Consolas, monospace;
+      padding: 1px 5px;
+      border-radius: var(--radius);
+      background: var(--wash);
+      color: var(--deep);
+      font-family: Consolas, "D2Coding", monospace;
+      font-size: 0.92em;
     }
-    .chat-table-wrap { overflow-x: auto; margin-top: 8px; }
+    .chat-message.user .chat-bubble code {
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+    }
+    .chat-table-wrap { overflow-x: auto; margin-top: 10px; }
     .chat-input {
       display: grid;
       grid-template-columns: 1fr auto;
-      gap: 9px;
-      padding: 14px;
-      border-top: 1px solid var(--border);
-      background: #fff;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--line-soft);
+      background: var(--surface);
     }
     .chat-input input { min-width: 0; }
-    .chat-input button:disabled { opacity: .55; cursor: wait; }
-    @media (max-width: 1000px) {
+
+    .login-form { max-width: 360px; }
+    .edit-form { display: flex; gap: 8px; align-items: center; }
+    .edit-form input[type="text"] { min-width: 180px; }
+    .edit-form input[type="number"] { width: 96px; }
+    .edit-form button { min-height: 36px; padding: 5px 14px; }
+
+    @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; padding: 18px 14px 12px; border-right: 0; border-bottom: 1px solid var(--line-soft); }
+      .brand { padding-bottom: 12px; }
+      .nav { display: flex; flex-wrap: wrap; gap: 4px; }
+      .nav a { border-left: 0; border-radius: var(--radius); margin: 0; padding: 8px 12px; }
+      .nav a.active { box-shadow: inset 0 -2px 0 var(--action); }
+      .group-title { flex: 0 0 100%; margin: 10px 4px 2px; }
+      .admin { margin-top: 14px; }
+      .main { padding: 20px 16px 40px; }
+      .stats { grid-template-columns: 1fr; }
+      .stat + .stat { border-left: 0; border-top: 1px solid var(--line-soft); }
       .cards { grid-template-columns: 1fr; }
-      .form-grid { grid-template-columns: 1fr; }
-      .chat-shell { height: 70vh; }
+      .chat-shell { height: 72vh; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { transition: none !important; }
     }
   </style>
 </head>
 <body>
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand">stockroom</div>
-      <div class="sub">SMALL WAREHOUSE</div>
+      <a class="brand" href="{{ url_for('dashboard') }}">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>
+          <span class="brand-name">Stockroom</span><br />
+          <span class="brand-sub">소형창고 재고관리</span>
+        </span>
+      </a>
 
-      <div class="group-title">등록</div>
-      <div class="nav">
+      <nav class="nav" aria-label="주 메뉴">
+        <a href="{{ url_for('dashboard') }}" class="{{ 'active' if active == 'dashboard' else '' }}">대시보드</a>
+
+        <div class="group-title">등록</div>
         <a href="{{ url_for('product_register') }}" class="{{ 'active' if active == 'product' else '' }}">품목 등록</a>
         <a href="{{ url_for('movement_register') }}" class="{{ 'active' if active == 'movement' else '' }}">입출고 등록</a>
-      </div>
 
-      <div class="group-title">조회</div>
-      <div class="nav">
+        <div class="group-title">조회</div>
         <a href="{{ url_for('inventory_status') }}" class="{{ 'active' if active == 'inventory' else '' }}">재고 현황</a>
         <a href="{{ url_for('product_history') }}" class="{{ 'active' if active == 'history' else '' }}">품목별 입출고 현황</a>
-      </div>
 
-      <div class="group-title">AI 도우미</div>
-      <div class="nav">
+        <div class="group-title">AI 도우미</div>
         <a href="{{ url_for('chat') }}" class="{{ 'active' if active == 'chat' else '' }}">대화창</a>
-      </div>
+      </nav>
 
       <div class="admin">
         {% if session.get('is_admin') %}
-          <div class="ok">관리자 로그인됨</div>
-          <a href="{{ url_for('admin_manage') }}">관리자 설정</a><br />
-          <a href="{{ url_for('admin_logout') }}">로그아웃</a>
+          <span class="who">관리자 로그인됨</span>
+          <div class="links">
+            <a href="{{ url_for('admin_manage') }}">관리자 설정</a>
+            <a href="{{ url_for('admin_logout') }}">로그아웃</a>
+          </div>
         {% else %}
           <a href="{{ url_for('admin_login') }}">관리자 로그인</a>
         {% endif %}
@@ -401,10 +616,10 @@ BASE_TEMPLATE = """
     <main class="main">
       <div class="head-row">
         <h1>{{ page_title }}</h1>
-        <span class="badge">{{ today }}</span>
+        <span class="date">{{ today }}</span>
       </div>
       {% if message %}
-      <div class="flash">{{ message }}</div>
+      <div class="flash" role="status">{{ message }}</div>
       {% endif %}
       {{ content|safe }}
     </main>
@@ -471,42 +686,80 @@ def dashboard() -> str:
         """
     ).fetchall()
 
+    summary = db.execute(
+        """
+        SELECT
+            COUNT(*) AS product_count,
+            COALESCE(SUM(stock), 0) AS total_stock,
+            COALESCE(SUM(CASE WHEN stock <= minimum_stock THEN 1 ELSE 0 END), 0) AS low_count
+        FROM (
+            SELECT
+                p.minimum_stock,
+                COALESCE(SUM(CASE WHEN m.movement_type = '입고' THEN m.quantity ELSE -m.quantity END), 0) AS stock
+            FROM products p
+            LEFT JOIN movements m ON m.product_id = p.id
+            GROUP BY p.id
+        )
+        """
+    ).fetchone()
+
     content = """
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">등록 품목</div>
+        <div class="stat-value">{{ '{:,}'.format(summary['product_count']) }}<small>개</small></div>
+      </div>
+      <div class="stat {{ 'is-alert' if summary['low_count'] else '' }}">
+        <div class="stat-label">재고 부족 품목</div>
+        <div class="stat-value">{{ '{:,}'.format(summary['low_count']) }}<small>개</small></div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">전체 재고 수량</div>
+        <div class="stat-value">{{ '{:,}'.format(summary['total_stock']) }}<small>개</small></div>
+      </div>
+    </div>
+
     <div class="cards">
-      <section class="card bg-green">
-        <h3>재고 부족 품목 5건</h3>
+      <section class="card">
+        <div class="card-head">
+          <h3>재고 부족 품목</h3>
+          <a class="link-all" href="{{ url_for('inventory_status') }}">재고 현황 보기</a>
+        </div>
         <table>
-          <thead><tr><th>등록일자</th><th>분류</th><th>제품명</th><th>최소재고</th><th>현재고</th></tr></thead>
+          <thead><tr><th>등록일자</th><th>분류</th><th>제품명</th><th class="num">최소재고</th><th class="num">현재고</th></tr></thead>
           <tbody>
           {% for row in low_stock %}
-            <tr>
+            <tr class="is-low">
               <td>{{ row['registered_date'] }}</td>
               <td>{{ row['category_name'] }}</td>
-              <td>{{ row['product_name'] }}</td>
-              <td>{{ row['minimum_stock'] }}</td>
-              <td class="{{ 'danger' if row['current_stock'] <= row['minimum_stock'] else '' }}">{{ row['current_stock'] }}</td>
+              <td class="name">{{ row['product_name'] }}</td>
+              <td class="num">{{ row['minimum_stock'] }}</td>
+              <td class="num low-text">{{ row['current_stock'] }}</td>
             </tr>
           {% else %}
-            <tr><td colspan="5" class="muted">재고 부족 품목이 없습니다.</td></tr>
+            <tr><td colspan="5" class="empty">재고 부족 품목이 없습니다.</td></tr>
           {% endfor %}
           </tbody>
         </table>
       </section>
-      <section class="card bg-blue">
-        <h3>최근 입출고 5건</h3>
+      <section class="card">
+        <div class="card-head">
+          <h3>최근 입출고</h3>
+          <span class="card-note">최근 5건</span>
+        </div>
         <table>
-          <thead><tr><th>순번</th><th>분류</th><th>제품명</th><th>입출고</th><th>수량</th></tr></thead>
+          <thead><tr><th class="num">순번</th><th>분류</th><th>제품명</th><th>구분</th><th class="num">수량</th></tr></thead>
           <tbody>
           {% for row in recent_movements %}
             <tr>
-              <td>{{ row['id'] }}</td>
+              <td class="num">{{ row['id'] }}</td>
               <td>{{ row['category_name'] }}</td>
-              <td>{{ row['product_name'] }}</td>
-              <td><span class="pill">{{ row['movement_type'] }}</span></td>
-              <td>{{ row['quantity'] }}</td>
+              <td class="name">{{ row['product_name'] }}</td>
+              <td><span class="pill {{ 'in' if row['movement_type'] == '입고' else 'out' }}">{{ row['movement_type'] }}</span></td>
+              <td class="num">{{ row['quantity'] }}</td>
             </tr>
           {% else %}
-            <tr><td colspan="5" class="muted">입출고 내역이 없습니다.</td></tr>
+            <tr><td colspan="5" class="empty">입출고 내역이 없습니다.</td></tr>
           {% endfor %}
           </tbody>
         </table>
@@ -521,6 +774,7 @@ def dashboard() -> str:
         content=content,
         low_stock=low_stock,
         recent_movements=recent_movements,
+        summary=summary,
     )
 
 
@@ -577,8 +831,8 @@ def product_register() -> str:
     stocks = get_stock_map()
 
     content = """
-    <section class="card bg-green">
-      <h3>품목 등록</h3>
+    <section class="card">
+      <h3>새 품목 정보</h3>
       <form method="post">
         <div class="form-grid">
           <div class="field">
@@ -611,22 +865,25 @@ def product_register() -> str:
       </form>
     </section>
 
-    <section class="card bg-blue" style="margin-top:14px;">
-      <h3>최근 등록 품목</h3>
+    <section class="card">
+      <div class="card-head">
+        <h3>최근 등록 품목</h3>
+        <span class="card-note">최근 10건</span>
+      </div>
       <table>
-        <thead><tr><th>순번</th><th>등록일자</th><th>분류</th><th>제품명</th><th>재고량</th><th>최소재고</th></tr></thead>
+        <thead><tr><th class="num">순번</th><th>등록일자</th><th>분류</th><th>제품명</th><th class="num">재고량</th><th class="num">최소재고</th></tr></thead>
         <tbody>
         {% for p in products %}
-          <tr>
-            <td>{{ p['id'] }}</td>
+          <tr class="{{ 'is-low' if stocks.get(p['id'], 0) <= p['minimum_stock'] else '' }}">
+            <td class="num">{{ p['id'] }}</td>
             <td>{{ p['registered_date'] }}</td>
             <td>{{ p['category_name'] }}</td>
-            <td>{{ p['name'] }}</td>
-            <td>{{ stocks.get(p['id'], 0) }}</td>
-            <td>{{ p['minimum_stock'] }}</td>
+            <td class="name">{{ p['name'] }}</td>
+            <td class="num">{{ stocks.get(p['id'], 0) }}</td>
+            <td class="num">{{ p['minimum_stock'] }}</td>
           </tr>
         {% else %}
-          <tr><td colspan="6" class="muted">등록된 품목이 없습니다.</td></tr>
+          <tr><td colspan="6" class="empty">등록된 품목이 없습니다.</td></tr>
         {% endfor %}
         </tbody>
       </table>
@@ -709,42 +966,42 @@ def movement_register() -> str:
     stocks = get_stock_map()
 
     content = """
-    <section class="card bg-blue">
-      <h3>제품 검색</h3>
+    <section class="card">
+      <h3>1. 제품 선택</h3>
       <form class="search-box" method="get">
-        <input type="text" name="q" value="{{ q }}" placeholder="제품명을 검색하세요" />
+        <input type="text" name="q" value="{{ q }}" placeholder="제품명을 검색하세요" aria-label="제품명 검색" />
         <button type="submit">검색</button>
       </form>
       <table>
-        <thead><tr><th>순번</th><th>등록일자</th><th>분류</th><th>제품명</th><th>현재고</th><th>선택</th></tr></thead>
+        <thead><tr><th class="num">순번</th><th>등록일자</th><th>분류</th><th>제품명</th><th class="num">현재고</th><th></th></tr></thead>
         <tbody>
         {% for p in products %}
-          <tr>
-            <td>{{ p['id'] }}</td>
+          <tr class="{{ 'is-selected' if p['id'] == selected_id else '' }}">
+            <td class="num">{{ p['id'] }}</td>
             <td>{{ p['registered_date'] }}</td>
             <td>{{ p['category_name'] }}</td>
-            <td>{{ p['name'] }}</td>
-            <td>{{ stocks.get(p['id'], 0) }}</td>
-            <td><a href="{{ url_for('movement_register', q=q, page=page, product_id=p['id']) }}">선택</a></td>
+            <td class="name">{{ p['name'] }}</td>
+            <td class="num">{{ stocks.get(p['id'], 0) }}</td>
+            <td class="num"><a class="link-btn" href="{{ url_for('movement_register', q=q, page=page, product_id=p['id']) }}">{{ '선택됨' if p['id'] == selected_id else '선택' }}</a></td>
           </tr>
         {% else %}
-          <tr><td colspan="6" class="muted">조회 결과가 없습니다.</td></tr>
+          <tr><td colspan="6" class="empty">조회 결과가 없습니다.</td></tr>
         {% endfor %}
         </tbody>
       </table>
       <div class="pager">
         {% if page > 1 %}
-          <a href="{{ url_for('movement_register', q=q, page=page-1, product_id=selected_id) }}">이전</a>
+          <a class="link-btn" href="{{ url_for('movement_register', q=q, page=page-1, product_id=selected_id) }}">이전</a>
         {% endif %}
         <span>{{ page }} / {{ pages }}</span>
         {% if page < pages %}
-          <a href="{{ url_for('movement_register', q=q, page=page+1, product_id=selected_id) }}">다음</a>
+          <a class="link-btn" href="{{ url_for('movement_register', q=q, page=page+1, product_id=selected_id) }}">다음</a>
         {% endif %}
       </div>
     </section>
 
-    <section class="card bg-orange" style="margin-top:14px;">
-      <h3>입출고 등록</h3>
+    <section class="card">
+      <h3>2. 입출고 등록</h3>
       {% if selected %}
         <form method="post">
           <input type="hidden" name="product_id" value="{{ selected['id'] }}" />
@@ -780,7 +1037,7 @@ def movement_register() -> str:
           <div class="line"><button type="submit">입출고 등록</button></div>
         </form>
       {% else %}
-        <p class="muted">상단 리스트에서 제품을 선택해 주세요.</p>
+        <p class="hint">위 목록에서 제품을 선택하면 입력 양식이 나타납니다.</p>
       {% endif %}
     </section>
     """
@@ -1261,4 +1518,12 @@ def admin_manage() -> str:
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(
+        debug=True,
+        host="127.0.0.1",
+        port=5000,
+        exclude_patterns=[
+            os.path.join(sys.base_prefix, "*"),
+            os.path.join(sys.prefix, "Lib", "*"),
+        ],
+    )
