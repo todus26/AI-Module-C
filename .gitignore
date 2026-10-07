@@ -18,3 +18,7 @@ KBA_AI/작업방/아나바다/static/uploads/*
 
 # 노트북 실행 중 생기는 벡터 DB (Chroma)
 KBA_AI/실습코드/database/
+
+# 로컬 RAG 실행 중 생기는 업로드 PDF와 벡터 DB
+KBA_AI/작업방/local_rag/uploads/
+KBA_AI/작업방/local_rag/chroma_db/

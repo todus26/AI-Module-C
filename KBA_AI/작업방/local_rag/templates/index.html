@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF 문서 챗봇</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <div class="brand">
+          <div class="brand-logo">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+          </div>
+          <span>PDF 문서 챗봇</span>
+        </div>
+
+        <input type="file" id="fileInput" accept="application/pdf,.pdf" multiple hidden />
+        <button class="btn-upload" id="uploadBtn" type="button">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+          PDF 업로드
+        </button>
+        <p class="upload-hint">여러 파일을 한 번에 선택하거나 이곳에 끌어다 놓으세요. (PDF만 가능)</p>
+
+        <button class="btn-newchat" id="newChatBtn" type="button">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          새 대화
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="section-title">
+          업로드된 문서 <span class="count" id="docCount">0</span>
+        </div>
+        <ul class="doc-list" id="docList"></ul>
+        <div class="doc-empty" id="docEmpty">아직 업로드된 문서가 없습니다.</div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div>LLM · EXAONE 3.5 2.4B</div>
+        <div>Embedding · bge-m3 · ChromaDB</div>
+      </div>
+      <div class="drop-overlay" id="dropOverlay">여기에 PDF를 놓으세요</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="메뉴">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="topbar-title">문서 기반 질의응답</div>
+      </header>
+
+      <section class="chat" id="chat">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h1>무엇이 궁금하신가요?</h1>
+          <p>왼쪽 메뉴에서 PDF를 업로드한 뒤 문서 내용에 대해 질문해 보세요.<br />답변 아래에 참고한 문서 조각과 페이지 번호가 함께 표시됩니다.</p>
+        </div>
+        <div class="messages" id="messages"></div>
+      </section>
+
+      <footer class="composer-wrap">
+        <form class="composer" id="composer">
+          <textarea id="questionInput" rows="1" placeholder="문서에 대해 질문하세요… (Enter 전송, Shift+Enter 줄바꿈)"></textarea>
+          <button class="send-btn" id="sendBtn" type="submit" aria-label="전송" disabled>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </form>
+        <div class="composer-note">답변은 업로드한 문서에서 찾은 내용만을 근거로 생성됩니다.</div>
+      </footer>
+    </main>
+  </div>
+
+  <div class="toast-stack" id="toastStack"></div>
+
+  <script>window.NO_INFO = {{ no_info | tojson }};</script>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
