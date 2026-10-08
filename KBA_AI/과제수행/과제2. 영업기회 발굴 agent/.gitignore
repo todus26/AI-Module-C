@@ -1,0 +1,11 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+_inspect_utf8.txt
+_pptx_utf8.txt
+_pptx_media/
+_sales_stats.txt
+.pytest_cache/
